@@ -1,0 +1,5 @@
+robots,planner_reached,planner_strict,policy_reached,policy_strict,policy_reached_sd
+5,91.3,60.0,63.6,8.9,4.9
+8,78.3,23.3,65.1,3.3,1.7
+10,81.0,23.3,69.7,7.8,3.9
+12,73.6,13.3,54.0,3.3,1.1
