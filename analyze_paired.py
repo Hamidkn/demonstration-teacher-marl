@@ -26,15 +26,23 @@ from collections import defaultdict
 from statistics import mean, stdev
 
 SRC = "results/eval_per_scenario.csv"
-SEEDS = (1, 2, 3)
+SEEDS = ()          # discovered from the file; see load()
 
 
 def load():
+    """Return the per-scenario outcomes and the seeds actually present.
+
+    The seed set is read from the file rather than hard-coded, so adding
+    training runs changes the analysis without changing this script.
+    """
     data = defaultdict(dict)        # (config, seed) -> {scenario: (success, reached)}
+    seeds = set()
     for r in csv.DictReader(open(SRC)):
-        data[(r["config"], int(r["train_seed"]))][int(r["scenario"])] = (
+        s = int(r["train_seed"])
+        seeds.add(s)
+        data[(r["config"], s)][int(r["scenario"])] = (
             int(r["success"]), int(r["reached"]) / int(r["robots"]))
-    return data
+    return data, tuple(sorted(seeds))
 
 
 def binom_two_sided(b, c):
@@ -75,7 +83,7 @@ def paired_t(diffs):
     return t, max(0.0, min(1.0, 2 * (0.5 - area)))
 
 
-def compare(data, a, b, metric_idx, label):
+def compare(data, a, b, metric_idx, label, SEEDS):
     print(f"\n{'=' * 74}\n{label}:  {a}  vs  {b}\n{'=' * 74}")
 
     # (1) the pooled unpaired test, as originally reported
@@ -100,15 +108,15 @@ def compare(data, a, b, metric_idx, label):
         ps.append(pv)
         print(f"    seed {s}: {a} wins {bb}, {b} wins {cc}  ->  p = {pv:.4f}"
               f"{'  *' if pv < 0.05 else ''}")
-    print(f"    Bonferroni across 3 seeds: smallest p x 3 = {min(ps)*3:.4f}"
-          f"{'  *' if min(ps)*3 < 0.05 else '  (n.s.)'}")
+    print(f"    Bonferroni across {len(SEEDS)} seeds: smallest p x {len(SEEDS)} = {min(ps)*len(SEEDS):.4f}"
+          f"{'  *' if min(ps)*len(SEEDS) < 0.05 else '  (n.s.)'}")
 
     # (3) seed as the unit of analysis
     da_m = [mean(v[metric_idx] for v in data[(a, s)].values()) * 100 for s in SEEDS]
     db_m = [mean(v[metric_idx] for v in data[(b, s)].values()) * 100 for s in SEEDS]
     diffs = [x - y for x, y in zip(da_m, db_m)]
     t, pt = paired_t(diffs)
-    print(f"(3) seed as unit (n = 3), paired t on seed means")
+    print(f"(3) seed as unit (n = {len(SEEDS)}), paired t on seed means")
     print(f"    {a}: {[f'{v:.1f}' for v in da_m]}")
     print(f"    {b}: {[f'{v:.1f}' for v in db_m]}")
     print(f"    diffs: {[f'{d:+.1f}' for d in diffs]}   mean {mean(diffs):+.1f}"
@@ -117,7 +125,8 @@ def compare(data, a, b, metric_idx, label):
 
 
 def main():
-    data = load()
+    data, SEEDS = load()
+    print(f'seeds present: {SEEDS}  (n = {len(SEEDS)})')
     have = {c for c, _s in data}
     import sys
     pairs = [("warm_bco", "warm_astar"), ("warm_bco", "cold"),
@@ -130,8 +139,8 @@ def main():
     for a, b in pairs:
         if a in have and b in have:
             if only != 1:
-                compare(data, a, b, 0, "STRICT SUCCESS")
-            compare(data, a, b, 1, "GOAL-REACHING")
+                compare(data, a, b, 0, "STRICT SUCCESS", SEEDS)
+            compare(data, a, b, 1, "GOAL-REACHING", SEEDS)
 
 
 if __name__ == "__main__":

@@ -28,16 +28,28 @@ HELD_OUT_SEED0 = 20_000
 ABL_DIR = "results/ablation_runs"
 ORIG_DIR = "results/training_runs"
 
+MAIN_DIR = "results/main_runs"   # seeds 4+ , run locally
+
+
+def _main(tag):
+    """Seeds 1-3 came from Colab and live under ORIG_DIR; later seeds are local."""
+    def path(s):
+        if s <= 3:
+            return f"{ORIG_DIR}/seed{s}/{tag}.pt"
+        return os.path.join(MAIN_DIR, f"{tag}_s{s}.pt")
+    return path
+
+
 MODELS = [
-    ("cold",            lambda s: f"{ORIG_DIR}/seed{s}/cold.pt"),
-    ("warm_astar",      lambda s: f"{ORIG_DIR}/seed{s}/warm_astar.pt"),
-    ("warm_bco",        lambda s: f"{ORIG_DIR}/seed{s}/warm_bco.pt"),
+    ("cold",            _main("cold")),
+    ("warm_astar",      _main("warm_astar")),
+    ("warm_bco",        _main("warm_bco")),
     ("warm_astar_cap",  lambda s: f"{ABL_DIR}/warm_astar_cap_s{s}.pt"),
     ("warm_bco_k1_cap", lambda s: f"{ABL_DIR}/warm_bco_k1_cap_s{s}.pt"),
     ("warm_bco_k3_cap", lambda s: f"{ABL_DIR}/warm_bco_k3_cap_s{s}.pt"),
     ("warm_bco_k5_cap", lambda s: f"{ABL_DIR}/warm_bco_k5_cap_s{s}.pt"),
 ]
-SEEDS = (1, 2, 3)
+SEEDS = tuple(range(1, 9))
 
 
 def evaluate_per_scenario(net, episodes):

@@ -47,8 +47,9 @@ results/
   eval_per_scenario.csv   per-scenario outcomes, needed for the paired tests
   sync_robustness.csv     observation-degradation grid (Tables 7, 8)
   scale_results.csv       robot-count sweep (Table 9)
-  training_runs/seed{1,2,3}/    cold / warm_astar / warm_bco logs + checkpoints
-  ablation_runs/                matched-budget arms, logs + checkpoints
+  training_runs/seed{1,2,3}/    cold / warm_astar / warm_bco, seeds 1-3 (Colab)
+  main_runs/                    the same three arms, seeds 4-8 (local)
+  ablation_runs/                matched-budget arms, 3 seeds
 ```
 
 ## Setup
@@ -72,7 +73,8 @@ seconds; the ones that retrain are marked.
 | Table 2, planner benchmark + McNemar | `python analyze_significance.py` |
 | Table 2, regenerate from scratch (~hours) | `python benchmark.py` |
 | Tables 4–5, held-out evaluation | `python evaluate_final.py --episodes 50` |
-| Section 5.2 statistics | `python analyze_paired.py` |
+| Section 5.2 statistics, 8 seeds | `python analyze_paired.py` |
+| Extra training seeds | `python run_extra_seeds.py` |
 | Table 6, ablation | `python analyze_ablation.py` |
 | Tables 7–8, observation degradation (~25 min) | `python experiment_sync.py --episodes 30` |
 | Table 9, robot-count sweep (~40 min) | `python experiment_scale.py --episodes 30` |
@@ -113,9 +115,11 @@ will kill a run partway with `OSError 22`.
   20000–20049, and training rollouts `train_seed × 100000` upward.
 - **A run is complete only if its `.pt` exists.** The checkpoint is written
   after the final step, so a `.csv` without one is a run that died midway.
-- **Three training seeds.** This is the binding limitation on every comparison
-  in the paper and the reason most results are reported as consistent in
-  direction rather than significant.
+- **Seed counts differ by experiment.** The main warm-start comparison uses
+  eight training seeds; the ablation and the degradation and scaling studies
+  use three. No comparison between learning configurations reaches
+  conventional significance, which is why the paper reports them as
+  exploratory.
 - The planner benchmark and the demonstration sets are stochastic; re-running
   `benchmark.py` or `generate_demos.py` will not reproduce the shipped files
   bit-for-bit, though the shipped files are what the paper's tables use.
