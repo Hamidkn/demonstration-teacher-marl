@@ -158,14 +158,18 @@ def save_csv(results: dict, path: str):
     import csv
     with open(path, "w", newline="") as f:
         writer = csv.writer(f)
+        # turn_angle was summarised in the paper's Table 3 but omitted from
+        # this file in the shipped run, so that column was the one number in
+        # the table a reader could not recompute. It is written out now.
         writer.writerow(["mode", "seed_index", "success", "reached",
-                         "steps", "sim_time", "path_length",
+                         "steps", "sim_time", "path_length", "turn_angle",
                          "replans", "waits", "collision_frames",
                          "robot_collisions"])
         for mode, runs in results.items():
             for i, r in enumerate(runs):
                 writer.writerow([mode, i, r["success"], r["reached"],
                                  r["steps"], r["sim_time"], r["path_length"],
+                                 r.get("turn_angle", ""),
                                  r["replans"], r["waits"], r["collision_frames"],
                                  r["robot_collisions"]])
     print(f"Raw data saved: {path}")
@@ -178,5 +182,5 @@ if __name__ == "__main__":
                             num_moving=3, num_static=3, max_steps=600)
     summary = summarize(results)
     print_table(summary)
-    save_csv(results, "results/benchmark_results.csv")
-    plot_results(summary, "benchmark_plot.png")
+    save_csv(results, "J:/My Drive/PayanName-arshad/benchmark_results.csv")
+    plot_results(summary, "J:/My Drive/PayanName-arshad/benchmark_plot.png")
